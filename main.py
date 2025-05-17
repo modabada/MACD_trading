@@ -31,7 +31,12 @@ def avg(price):
 
 fig = plt.figure()
 ax = plt.axes()
-rm = RequestModule("https://api.example.com", "your_token", "your_stock_cd")
+rm = RequestModule(
+    host="https://api.kiwoom.com", 
+    appkey="PMxbQHXCG4sdTRnOqQASC6_gdHlF4i3iVfQVOSGgXms", 
+    secretkey="-Upsj8hXF-yyOv4v13f8Xtr7Mvb7EsADlvhDiUKrrjY",
+    stock_cd="005930",
+)
 x = [0]
 MACD_graph = [0]
 signal_graph = [0]
@@ -42,13 +47,13 @@ price_history = []
 MACD_history = []
 isBying = False
 
-samsung_history = rm.get_history_price()
+# samsung_history = rm.get_history_price()
 
 def animate(i):
     global x, MACD_graph, signal_graph, price_graph, lma_graph, sma_graph, price_history, MACD_history, isBying
 
-    # price_history.append(rm.get_cur_price())
-    price_history.append(samsung_history.pop())
+    price_history.append(rm.get_cur_price())
+    # price_history.append(samsung_history.pop())
     if len(price_history) >= LONG_SMA:
         lma = avg(price_history)
         sma = avg(price_history[LONG_SMA - SHORT_SMA:])
