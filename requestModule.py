@@ -12,14 +12,19 @@ class RequestModule:
 
     def __del__(self):
         self._revoke_bearer()
+        print('Request module deleted')
 
     def get_cur_price(self) -> float:
-        # TODO: 임시로 네이버증권에서 크롤링해옴
-        res = requests.get('https://polling.finance.naver.com/api/realtime/domestic/stock/005930')
-        data = json.loads(res.text)
-        data = data['datas'][0]['closePrice'].replace(',', '')
-        return float(data)
-        return 1000
+        res = self._post(
+            endpoint='/api/dostk/stkinfo',
+            body={'stk_cd': self.stock_cd}
+        )
+
+        if res['return_code'] != 0:
+            raise Exception(f'현재가 가져오기 실패: {response['return_msg']}')
+        
+        # 왜인지는 모르겠으나, 앞에 - 기호가 붙는 경우 확인,
+        return abs(float(res['cur_prc']))
 
     def buy_order(self, amount: int) -> bool:
         # TODO: Implement the logic to make an order
@@ -44,16 +49,16 @@ class RequestModule:
         data = list(map(lambda x: int(x['clpr']), data['response']['body']['items']['item']))
         return data
     
-    def _request(self, endpoint: str, apiId: str):
+    def _post(self, endpoint: str, body: dict) -> json:
         url = f"{self.host}/{endpoint}"
         headers = {
             'Content-Type': 'application/json;charset=UTF-8', # 컨텐츠타입
 		    'authorization': f'Bearer {self.token}', # 접근토큰
 		    # 'cont-yn': cont_yn, # 연속조회여부
 		    # 'next-key': next_key, # 연속조회키
-		    'api-id': apiId, # TR명
+		    'api-id': 'ka10001', # TR명
 	    }
-        response = requests.post(url, headers=headers)
+        response = requests.post(url, headers=headers, json=body)
         return response.json()
     
     def _revoke_bearer(self):
@@ -64,7 +69,7 @@ class RequestModule:
 		    'secretkey': self.secretkey,
 		    'token': self.token,
 	    }
-        response = requests.post(url, headers=headers, data=body).json()
+        response = requests.post(url, headers=headers, json=body).json()
 
 
 def _get_bearer(host: str, appkey: str, secretkey: str) -> str:
