@@ -5,13 +5,13 @@ import json
 class RequestModule:
     def __init__(self, host: str, appkey: str, secretkey: str, stock_cd: str):
         self.host = host
-        self.stock_cd = stock_cd
         self.appkey = appkey
         self.secretkey = secretkey
+        self.stock_cd = stock_cd
         self.token = _get_bearer(host=host, appkey=appkey, secretkey=secretkey,)
 
     def __del__(self):
-        _revoke_bearer()
+        self._revoke_bearer()
 
     def get_cur_price(self) -> float:
         # TODO: 임시로 네이버증권에서 크롤링해옴
@@ -55,7 +55,7 @@ class RequestModule:
 	    }
         response = requests.post(url, headers=headers)
         return response.json()
-
+    
     def _revoke_bearer(self):
         url = f"{self.host}/oauth2/revoke"
         headers = {'Content-Type': 'application/json;charset=UTF-8'}
@@ -71,13 +71,15 @@ def _get_bearer(host: str, appkey: str, secretkey: str) -> str:
     url = f"{host}/oauth2/token"
     headers = {'Content-Type': 'application/json;charset=UTF-8'}
     body = {
-        'grant_type': 'client_credential',
+        'grant_type': 'client_credentials',
         'appkey': appkey,
         'secretkey': secretkey,
     }
-    response = requests.post(url, headers=headers, data=body).json()
+    response = requests.post(url, headers=headers, json=body).json()
 
     if response['return_code'] != 0:
         raise Exception(f'로그인 실패: {response['return_msg']}')
     
     return response['token']
+
+
